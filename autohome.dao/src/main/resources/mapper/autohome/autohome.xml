@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "cn.jeneral.dao.autohome.AutoHomeDao">
+
+    <resultMap id = "BaseResultMap" type = "cn.jeneral.entity.CarCategory">
+        <id column = "id" property = "id" />
+        <result column = "level" property = "level" />
+        <result column = "parent_id" property = "parentId" />
+        <result column = "first_letter" property = "firstLetter" />
+        <result column = "brand" property = "brand" />
+        <result column = "series" property = "series" />
+        <result column = "year" property = "year" />
+        <result column = "name" property = "name" />
+        <result column = "logo" property = "logo" />
+        <result column = "car_manufacturer" property = "carManufacturer" />
+        <result column = "car_type" property = "carType" />
+        <result column = "url" property = "url" />
+        <result column = "engine" property = "engine" />
+        <result column = "precursor" property = "precursor" />
+        <result column = "gear" property = "gear" />
+        <result column = "spec_id" property = "specId" />
+        <result column = "status" property = "status" />
+    </resultMap>
+
+    <!-- 根据ID查询 -->
+    <select id = "selectById" resultMap = "BaseResultMap">
+        select
+            *
+        from autohome_spider
+        where id = #{id}
+    </select>
+
+    <select id = "selectByLevelAndStatus" resultMap = "BaseResultMap">
+        select
+        *
+        from autohome_spider
+        where
+            `level` = #{level}
+            and status = #{status}
+    </select>
+
+    <update id="modifyStatus">
+        update autohome_spider
+        set `status` = #{status}
+        where id = #{id}
+    </update>
+
+    <insert id = "batchInsert" useGeneratedKeys="false" keyProperty="id">
+        insert into autohome_spider (
+        `level`,
+        parent_id,
+        first_letter,
+        brand,
+        series,
+        `year`,
+        `name`,
+        logo,
+        car_manufacturer,
+        car_type,
+        url,
+        engine,
+        precursor,
+        gear,
+        spec_id,
+        status
+        )
+        values
+        <foreach collection="carCategoryList" separator="," index="index" item="param">
+            (
+            #{param.level},
+            #{param.parentId},
+            #{param.firstLetter},
+            #{param.brand},
+            #{param.series},
+            #{param.year},
+            #{param.name},
+            #{param.logo},
+            #{param.carManufacturer},
+            #{param.carType},
+            #{param.url},
+            #{param.engine},
+            #{param.precursor},
+            #{param.gear},
+            #{param.specId},
+            #{param.status}
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>

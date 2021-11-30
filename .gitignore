@@ -1,0 +1,13 @@
+target
+target/*
+*~
+.idea
+*.iml
+*.eml
+.project
+.settings
+.classpath
+/target
+*/target/**
+*.log
+application-*.properties
