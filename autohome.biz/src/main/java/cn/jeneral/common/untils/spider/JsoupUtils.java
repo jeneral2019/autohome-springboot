@@ -6,9 +6,6 @@ import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 
-/**
- * Created by tangzhanpeng on 2017/2/25.
- */
 public class JsoupUtils {
 
     private static void validateRule(SpiderRule spiderRule) {

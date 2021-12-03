@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         getLevel3();
     }
 
+    @Override
     public void getLevel1And2(){
 
         List<CarCategory> carCategoryList = new ArrayList<>();
@@ -102,6 +104,8 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
     }
 
     private List<CarCategory> carCategoryList3 = new ArrayList<>();
+
+    @Override
     public void getLevel3(){
 
         while (true){
@@ -141,7 +145,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         driver.get(parentCarCategory.getUrl());
 
         try {
-            List<DWWebElement> listStatusEle = driver.findVisElements(By.cssSelector(".list-stats>li"));
+            List<DWWebElement> listStatusEle = driver.setWaitTime(10L).findVisElements(By.cssSelector(".list-stats>li"));
             if (listStatusEle.size() == 0){
                 autoHomeDao.modifyStatus(parentCarCategory.getId(),20);
                 return;
@@ -160,16 +164,18 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
                     continue;
                 }
                 //预售、在售
-                String id = liELe.findElement(By.tagName("a")).getAttribute("data-target");
-                Boolean a = liELe.clickForce();
+                DWWebElement aEle = liELe.findElement(By.tagName("a"));
+                String id = aEle.getAttribute("data-target");
+                Boolean a = aEle.clickForce();
                 Boolean b = driver.waitEle(By.cssSelector(id+".active"),5L);
                 getCarCategory(id,parentCarCategory);
             }
             autoHomeDao.batchInsert(carCategoryList3);
+            autoHomeDao.modifyStatus(parentCarCategory.getId(),2);
             carCategoryList3.clear();
 
         }catch (Exception e){
-            autoHomeDao.modifyStatus(parentCarCategory.getId(),3);
+            autoHomeDao.modifyStatus(parentCarCategory.getId(),500);
             return;
         }
     }
@@ -177,7 +183,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
     final Long quickTime = 5L;
     private void getCarCategory(String id,CarCategory parentCarCategory){
 
-        if (!driver.waitEle(By.cssSelector(id+">dl"),quickTime)) {
+        if (!driver.setWaitTime(quickTime).waitEle(By.cssSelector(id+">dl"))) {
             System.out.println(id + "is empty");
             return;
         }
@@ -193,13 +199,25 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         DWWebElement specWrap = driver.findElement(By.cssSelector(id));
         List<DWWebElement> dlEleList = specWrap.findElements(By.tagName("dl"));
         for (DWWebElement dlEle:dlEleList){
-            CarCategory carCategory3 = carCategoryTemp;
+
             DWWebElement dtEle = dlEle.setWaitTime(5L).findElement(By.tagName("dt"));
-            DWWebElement engineEle = dtEle.findElement(By.cssSelector("spec-name"));
+            DWWebElement engineEle = null;
+            if (dtEle == null){
+                dtEle = dlEle.setWaitTime(5L).findElement(By.tagName("dt"));
+                System.out.println(dtEle);
+            }else {
+                engineEle = dtEle.setWaitTime(5L).findElement(By.cssSelector(".spec-name"));
+            }
+
+
+            String engineStr = null;
             if (engineEle != null){
-                carCategory3.setEngine(engineEle.getText());
+                engineStr = engineEle.getText();
             }
             for (DWWebElement ddEle:dlEle.findElements(By.tagName("dd"))){
+                CarCategory carCategory3 = new CarCategory();
+                BeanUtils.copyProperties(carCategoryTemp,carCategory3);
+                carCategory3.setEngine(engineStr);
                 if (id.equals("#specWrap-2")){
                     carCategory3.setYear(ddEle.getAttribute("data-sift1"));
                 }else if (id.equals("#specWrap-1")){

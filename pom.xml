@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.jeneral</groupId>
-    <artifactId>autohome</artifactId>
+    <artifactId>autohome-spring</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>

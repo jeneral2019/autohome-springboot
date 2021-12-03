@@ -11,3 +11,4 @@ target/*
 */target/**
 *.log
 application-*.properties
+mysql_data

@@ -2,11 +2,6 @@ package cn.jeneral.common.untils.spider;
 
 import lombok.Data;
 
-/**
- * 规则类
- *
- * @author zhy
- */
 @Data
 public class SpiderRule {
     public final static int GET = 0;

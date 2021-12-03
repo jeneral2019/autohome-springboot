@@ -11,4 +11,7 @@ public interface AutohomeSeries {
 
     public void autoHomeSpider();
 
+    public void getLevel1And2();
+
+    public void getLevel3();
 }

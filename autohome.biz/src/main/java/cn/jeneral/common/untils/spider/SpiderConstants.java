@@ -1,10 +1,5 @@
 package cn.jeneral.common.untils.spider;
 
-
-/**
- * Created by tangzhanpeng on 2017/2/22.
- */
-
 public class SpiderConstants {
 
     /**

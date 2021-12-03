@@ -1,0 +1,11 @@
+version: '2.4'
+services:
+  mysql:
+    image: mysql-spider
+    init: true
+    restart: always
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - 3306:3306

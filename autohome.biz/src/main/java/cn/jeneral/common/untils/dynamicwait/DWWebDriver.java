@@ -293,7 +293,7 @@ public class DWWebDriver {
 
     public List<DWWebElement> findVisElements(By by){
         if (!waitVisEle(by)){
-            return null;
+            return new ArrayList<>();
         }
         List<WebElement> webElementList = driver.findElements(by);
         List<DWWebElement> visWebElementList = new ArrayList<>();
