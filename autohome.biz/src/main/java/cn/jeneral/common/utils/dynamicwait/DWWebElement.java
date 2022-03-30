@@ -1,5 +1,6 @@
-package cn.jeneral.common.untils.dynamicwait;
+package cn.jeneral.common.utils.dynamicwait;
 
+import cn.jeneral.entity.FindValue;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author cn.jeneral
+ * @author jeneral
  */
 public class DWWebElement {
     private static Long waitTimeDefault = 20L;
@@ -206,6 +207,13 @@ public class DWWebElement {
             }
         }
         return webElementVisList;
+    }
+
+    public DWWebElement findElement(FindValue findValue){
+        if (findValue.getBy() == null || findValue.getIndex() < 0){
+            throw new RuntimeException("value error");
+        }
+        return findElement(findValue.getBy(),findValue.getIndex());
     }
 
     /**

@@ -14,4 +14,8 @@ public interface AutohomeSeries {
     public void getLevel1And2();
 
     public void getLevel3();
+
+    public void getLevel3InNormal(CarCategory parentCarCategory);
+
+    public void getLevel3InNormalV2(CarCategory parentCarCategory);
 }

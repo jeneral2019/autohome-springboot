@@ -1,6 +1,6 @@
-package cn.jeneral.common.untils.dynamicwait;
+package cn.jeneral.common.utils.dynamicwait;
 
-
+import cn.jeneral.entity.FindValue;
 import org.openqa.selenium.*;
 import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author cn.jeneral
+ * @author jeneral
  */
 public class DWWebDriver {
 
@@ -202,7 +202,7 @@ public class DWWebDriver {
 
     public Boolean waitEle(By by) {
         if (by == null){
-            return false;
+            throw new RuntimeException("waitEle : parameter by is null");
         }
         WebDriverWait wait = new WebDriverWait(driver, waitTime);
         try {
@@ -215,7 +215,7 @@ public class DWWebDriver {
 
     public Boolean waitEle(By by, int index) {
         if (by == null || index < 0){
-            return false;
+            throw new RuntimeException("waitEle : parameter by is null");
         }
         WebDriverWait wait = new WebDriverWait(driver, waitTime);
         try {
@@ -336,6 +336,28 @@ public class DWWebDriver {
         } catch (Exception e) {
             throw new RuntimeException("cannot find comboBox");
         }
+    }
+
+    public DWWebElement findElement(FindValue findValue){
+        if (findValue.getBy() == null || findValue.getIndex() < 0){
+            throw new RuntimeException("value error");
+        }
+        return findElement(findValue.getBy(),findValue.getIndex());
+    }
+
+    public DWWebElement findElement(List<FindValue> findValueList){
+        DWWebElement tempEle = null;
+        for (int i=0;i<findValueList.size()-1;i++){
+            if(i==0){
+                tempEle = this.findElement(findValueList.get(i));
+                continue;
+            }
+            if (i != 0 && tempEle == null){
+                throw new RuntimeException("cannot find");
+            }
+            tempEle = tempEle.findElement(findValueList.get(i));
+        }
+        return tempEle;
     }
 
 }

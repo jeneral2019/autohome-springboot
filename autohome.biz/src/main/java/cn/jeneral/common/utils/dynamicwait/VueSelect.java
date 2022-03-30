@@ -1,4 +1,4 @@
-package cn.jeneral.common.untils.dynamicwait;
+package cn.jeneral.common.utils.dynamicwait;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author cn.jeneral
+ * @author jeneral
  */
 public class VueSelect {
 

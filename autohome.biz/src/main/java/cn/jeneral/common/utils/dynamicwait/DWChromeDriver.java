@@ -1,10 +1,10 @@
-package cn.jeneral.common.untils.dynamicwait;
+package cn.jeneral.common.utils.dynamicwait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 /**
- * @author cn.jeneral
+ * @author jeneral
  */
 public class DWChromeDriver extends DWWebDriver{
 

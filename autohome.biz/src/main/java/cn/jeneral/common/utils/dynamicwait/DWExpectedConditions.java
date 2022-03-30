@@ -1,4 +1,4 @@
-package cn.jeneral.common.untils.dynamicwait;
+package cn.jeneral.common.utils.dynamicwait;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -8,7 +8,7 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import java.util.List;
 
 /**
- * @author cn.jeneral
+ * @author jeneral
  */
 public class DWExpectedConditions implements ExpectedCondition{
 

@@ -1,4 +1,5 @@
 import cn.jeneral.biz.autohome.AutohomeSeries;
+import cn.jeneral.entity.CarCategory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
@@ -18,4 +19,12 @@ public class AutohomeTest  extends AbstractTestNGSpringContextTests {
     public void getLevel3(){
         autohomeSeries.getLevel3();
     }
+
+
+    @Test
+    public void noTest(){
+        CarCategory carCategory = autohomeSeries.getCarCategory(1006L).get(0);
+        autohomeSeries.getLevel3InNormal(carCategory);
+    }
+
 }

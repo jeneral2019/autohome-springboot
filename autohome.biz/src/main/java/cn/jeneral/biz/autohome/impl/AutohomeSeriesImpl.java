@@ -1,13 +1,15 @@
 package cn.jeneral.biz.autohome.impl;
 
 import cn.jeneral.biz.autohome.AutohomeSeries;
-import cn.jeneral.common.untils.dynamicwait.DWChromeDriver;
-import cn.jeneral.common.untils.dynamicwait.DWWebDriver;
-import cn.jeneral.common.untils.dynamicwait.DWWebElement;
-import cn.jeneral.common.untils.spider.JsoupUtils;
-import cn.jeneral.common.untils.spider.SpiderRule;
+import cn.jeneral.common.utils.dynamicwait.DWChromeDriver;
+import cn.jeneral.common.utils.dynamicwait.DWWebDriver;
+import cn.jeneral.common.utils.dynamicwait.DWWebElement;
+import cn.jeneral.common.utils.spider.JsoupUtils;
+import cn.jeneral.common.utils.spider.SpiderRule;
 import cn.jeneral.dao.autohome.AutoHomeDao;
 import cn.jeneral.entity.CarCategory;
+import cn.jeneral.entity.FindValue;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -20,6 +22,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class AutohomeSeriesImpl implements AutohomeSeries {
 
@@ -86,7 +89,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
                         Long seriesId = Long.valueOf(seriesIdStr);
 
                         if(seriesUrl == null || manufacturer == null || seriesId == null){
-                            System.out.println("==>" + seriesUrl + "  :  " + manufacturer);
+                            log.info("==>" + seriesUrl + "  :  " + manufacturer);
                             continue;
                         }
 
@@ -128,6 +131,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
                 }else if (doc.select(".subnav").size() > 0 ){
                     getLevel3InSpecial(carCategory,doc);
                 }else {
+                    log.error("cannot find");
                     autoHomeDao.modifyStatus(carCategory.getId(),500);
                 }
 
@@ -137,6 +141,52 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         }
 
     }
+
+    @Override
+    public void getLevel3InNormalV2(CarCategory parentCarCategory){
+        if (driver == null){
+            driver = new DWChromeDriver();
+        }
+        driver.get(parentCarCategory.getUrl());
+
+        //获取list 包括 预售在售和停售款
+        List<DWWebElement> listStatusEle = driver.setWaitTime(10L).findElements(By.cssSelector(".list-stats>li"));
+        if (listStatusEle.size() == 0){
+            autoHomeDao.modifyStatus(parentCarCategory.getId(),20);
+            return;
+        }
+
+        //遍历所有list
+        for(int i=0;i<listStatusEle.size();i++){
+            DWWebElement liELe = driver.setWaitTime(10L).findElement(By.cssSelector(".list-stats>li"),i);
+
+            //停售款
+            if (liELe.getAttribute("class").equals("more-dropdown")){
+                List<DWWebElement> moreListEle = driver.setWaitTime(10L).findElement(By.cssSelector(".list-stats>li"),i).findElements(By.cssSelector("#haltList>li>a"));
+                for (int j=0;j<moreListEle.size();j++){
+                    DWWebElement moreLiEle = driver.setWaitTime(10L).findElement(By.cssSelector(".list-stats>li"),i).findElement(By.cssSelector("#haltList>li>a"),j);
+                    Boolean a = moreLiEle.clickForce(By.cssSelector("#specWrap-3>.halt-spec")) != null;
+                    parentCarCategory.setYear(moreLiEle.getAttribute("innerHTML"));
+                    getCarCategory("#specWrap-3",parentCarCategory);
+                    parentCarCategory.setYear(null);
+                }
+                continue;
+            }
+            //预售、在售
+            DWWebElement aEle = driver.setWaitTime(10L).findElement(By.cssSelector(".list-stats>li"),i).findElement(By.tagName("a"));
+            String id = aEle.getAttribute("data-target");
+            Boolean a = aEle.clickForce();
+            Boolean b = driver.waitEle(By.cssSelector(id+".active"),5L);
+            getCarCategory(id,parentCarCategory);
+        }
+        autoHomeDao.batchInsert(carCategoryList3);
+        autoHomeDao.modifyStatus(parentCarCategory.getId(),2);
+        carCategoryList3.clear();
+
+    }
+
+
+    @Override
     public void getLevel3InNormal(CarCategory parentCarCategory){
 
         if (driver == null){
@@ -144,7 +194,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         }
         driver.get(parentCarCategory.getUrl());
 
-        try {
+//        try {
             List<DWWebElement> listStatusEle = driver.setWaitTime(10L).findVisElements(By.cssSelector(".list-stats>li"));
             if (listStatusEle.size() == 0){
                 autoHomeDao.modifyStatus(parentCarCategory.getId(),20);
@@ -174,17 +224,25 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
             autoHomeDao.modifyStatus(parentCarCategory.getId(),2);
             carCategoryList3.clear();
 
-        }catch (Exception e){
-            autoHomeDao.modifyStatus(parentCarCategory.getId(),500);
-            return;
-        }
+//        }catch (Exception e){
+//            log.error("getLevel3InNormal e========>"+e.getCause().getMessage());
+//            autoHomeDao.modifyStatus(parentCarCategory.getId(),500);
+//            return;
+//        }
     }
 
     final Long quickTime = 5L;
+
+    /**
+     * 获取车型数据
+     * @param id
+     * @param parentCarCategory
+     */
     private void getCarCategory(String id,CarCategory parentCarCategory){
 
+        //检查该tab下是否存在车型数据
         if (!driver.setWaitTime(quickTime).waitEle(By.cssSelector(id+">dl"))) {
-            System.out.println(id + "is empty");
+            log.info(id + "is empty");
             return;
         }
 
@@ -197,24 +255,17 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
         carCategoryTemp.setCarType(parentCarCategory.getCarType());
 
         DWWebElement specWrap = driver.findElement(By.cssSelector(id));
-        List<DWWebElement> dlEleList = specWrap.findElements(By.tagName("dl"));
-        for (DWWebElement dlEle:dlEleList){
-
-            DWWebElement dtEle = dlEle.setWaitTime(5L).findElement(By.tagName("dt"));
-            DWWebElement engineEle = null;
-            if (dtEle == null){
-                dtEle = dlEle.setWaitTime(5L).findElement(By.tagName("dt"));
-                System.out.println(dtEle);
-            }else {
-                engineEle = dtEle.setWaitTime(5L).findElement(By.cssSelector(".spec-name"));
-            }
-
-
+        List<DWWebElement> dlEleList = driver.findElement(By.cssSelector(id)).findElements(By.tagName("dl"));
+        for (int i = 0;i< dlEleList.size();i++){
             String engineStr = null;
-            if (engineEle != null){
-                engineStr = engineEle.getText();
+            DWWebElement dtEle = driver.findElement(By.cssSelector(id)).findElement(By.tagName("dl"),i).setWaitTime(quickTime).findElement(By.tagName("dt"));
+            if (dtEle != null){
+                DWWebElement specNameEle = driver.setWaitTime(quickTime).findElement(By.cssSelector(id)).findElement(By.tagName("dl"),i).setWaitTime(quickTime).findElement(By.tagName("dt")).findElement(By.cssSelector(".spec-name"));
+                if (specNameEle != null){engineStr = specNameEle.getText();}
             }
-            for (DWWebElement ddEle:dlEle.findElements(By.tagName("dd"))){
+            List<DWWebElement> ddEleList = driver.findElement(By.cssSelector(id)).findElement(By.tagName("dl"),i).findElements(By.tagName("dd"));
+            for(int j=0;j< ddEleList.size();j++){
+                DWWebElement ddEle = driver.findElement(By.cssSelector(id)).findElement(By.tagName("dl"),i).findElement(By.tagName("dd"),j);
                 CarCategory carCategory3 = new CarCategory();
                 BeanUtils.copyProperties(carCategoryTemp,carCategory3);
                 carCategory3.setEngine(engineStr);
@@ -227,33 +278,81 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
                     DWWebElement nameEle = ddEle.findElement(By.className("name"));
                     getNameAndSpecId(nameEle,carCategory3);
                 }catch (Exception e){
-                    System.out.println("nameEle find error"+e.toString());
-                    System.out.println("set name = 名字未找到 , specId = -");
+                    log.info("nameEle find error"+e.toString());
+                    log.info("set name = 名字未找到 , specId = -");
                     carCategory3.setName("名字未找到");
                 }
                 try {
                     carCategory3.setPrecursor(ddEle.findElement(By.className("type-default")).getText());
                 }catch (Exception e){
-                    System.out.println("set precursor=未知");
+                    log.info("set precursor=未知");
                     carCategory3.setPrecursor("未知");
                 }
 
                 try {
                     carCategory3.setGear(ddEle.findElement(By.className("type-default"),1).getText());
                 }catch (Exception e){
-                    System.out.println("set gear=未知");
+                    log.info("set gear=未知");
                     carCategory3.setGear("未知");
                 }
                 carCategoryList3.add(carCategory3);
             }
         }
+//        for (DWWebElement dlEle:dlEleList){
+//
+//            DWWebElement dtEle = dlEle.setWaitTime(quickTime).findElement(By.tagName("dt"));
+//            DWWebElement engineEle = null;
+//            if (dtEle == null){
+//                log.info("dtEle is null");
+//            }else {
+//                engineEle = dtEle.setWaitTime(quickTime).findElement(By.cssSelector(".spec-name"));
+//            }
+//
+//
+//            String engineStr = null;
+//            if (engineEle != null){
+//                engineStr = engineEle.getText();
+//            }
+//            for (DWWebElement ddEle:dlEle.findElements(By.tagName("dd"))){
+//                CarCategory carCategory3 = new CarCategory();
+//                BeanUtils.copyProperties(carCategoryTemp,carCategory3);
+//                carCategory3.setEngine(engineStr);
+//                if (id.equals("#specWrap-2")){
+//                    carCategory3.setYear(ddEle.getAttribute("data-sift1"));
+//                }else if (id.equals("#specWrap-1")){
+//                    carCategory3.setYear("-1");
+//                }
+//                try {
+//                    DWWebElement nameEle = ddEle.findElement(By.className("name"));
+//                    getNameAndSpecId(nameEle,carCategory3);
+//                }catch (Exception e){
+//                    log.info("nameEle find error"+e.toString());
+//                    log.info("set name = 名字未找到 , specId = -");
+//                    carCategory3.setName("名字未找到");
+//                }
+//                try {
+//                    carCategory3.setPrecursor(ddEle.findElement(By.className("type-default")).getText());
+//                }catch (Exception e){
+//                    log.info("set precursor=未知");
+//                    carCategory3.setPrecursor("未知");
+//                }
+//
+//                try {
+//                    carCategory3.setGear(ddEle.findElement(By.className("type-default"),1).getText());
+//                }catch (Exception e){
+//                    log.info("set gear=未知");
+//                    carCategory3.setGear("未知");
+//                }
+//                carCategoryList3.add(carCategory3);
+//            }
+//        }
     }
 
     private void getNameAndSpecId(DWWebElement nameEle,CarCategory carCategory3){
         try{
             carCategory3.setName(nameEle.getText());
         }catch (Exception e){
-            System.out.println("set name = 名字未找到");
+            log.info("set name = 名字未找到");
             carCategory3.setName("名字未找到");
         }
         try {
@@ -266,7 +365,7 @@ public class AutohomeSeriesImpl implements AutohomeSeries {
             String specIdStr = fileStr.substring(fileStr.indexOf("/",1)+1,fileStr.length()-1);
             carCategory3.setSpecId(Long.valueOf(specIdStr));
         }catch (Exception e){
-            System.out.println("cannot find specId");
+            log.info("cannot find specId");
         }
     }
 

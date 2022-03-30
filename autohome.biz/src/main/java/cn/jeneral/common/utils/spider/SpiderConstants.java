@@ -1,4 +1,4 @@
-package cn.jeneral.common.untils.spider;
+package cn.jeneral.common.utils.spider;
 
 public class SpiderConstants {
 

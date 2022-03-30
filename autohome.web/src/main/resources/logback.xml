@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property resource = "application.properties" />
+    <property resource = "application-dev.properties" />
+
+    <property name="FILE_LOG_PATTERN" value="[%d{'MM-dd HH:mm:ss,SSS',GMT+8:00}] %-5p [%.10t][%X{IP}][%X{OP}][%X{OPAS}] %logger{36}[%L] - %m%n" />
+
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <appender name="COMMON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/common.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/common.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="DB" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="cn.jeneral.dao.DbNoConneInfoFilter" />
+        <file>${LOG_PATH}/db.log</file>
+        <append>true</append>
+        <param name="datePattern" value=".yyyy-MM-dd" />
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/db.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error.log</file>
+        <append>true</append>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="UIAction" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/UIAction.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/UIAction.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="dao" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="DB" />
+        <appender-ref ref="ERROR" />
+    </logger>
+    <logger name="java.sql" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="DB" />
+        <appender-ref ref="ERROR" />
+    </logger>
+    <logger name="java.sql.ResultSet" additivity="false">
+        <level value="INFO" />
+        <appender-ref ref="DB" />
+        <appender-ref ref="ERROR" />
+    </logger>
+
+    <appender name="autoHome" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/autoHome.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/autoHome.%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="ui.annotaion.UIActLog" additivity="false">
+        <level value="DEBUG" />
+        <appender-ref ref="UIAction" />
+    </logger>
+    <logger name="cn.jeneral.common.utils" additivity="false">
+        <level value="info" />
+        <appender-ref ref="utils" />
+        <appender-ref ref="ERROR" />
+    </logger>
+
+    <root>
+        <level value="DEBUG" />
+        <appender-ref ref="COMMON" />
+        <appender-ref ref="ERROR" />
+    </root>
+</configuration>
