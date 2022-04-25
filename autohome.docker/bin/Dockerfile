@@ -1,4 +1,5 @@
-FROM mysql:8.0
+#FROM mysql:8.0
+FROM mysql:8.0-oracle
 
 ENV MYSQL_ROOT_PASSWORD=123456
 

@@ -28,6 +28,8 @@ if [ "${action}" = "start" ] ;then
   start
 elif [ "${action}" = "stop" ] ;then
   stop
+elif [ "${action}" = "init" ] ;then
+  init
 else
   help
 fi
